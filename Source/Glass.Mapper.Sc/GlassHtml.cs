@@ -448,7 +448,21 @@ namespace Glass.Mapper.Sc
             }
         }
 
-        private string MakeEditable<T>(Expression<Func<T, object>> field, Expression<Func<T, string>> standardOutput, T target, object parameters)
+        public static bool IsInPreviewMode
+        {
+            get
+            {
+                return Sitecore.Context.PageMode.IsPreview;
+            }
+        }
+
+        private static bool ShouldRunRenderFieldPipeline()
+        {
+	        return IsInEditingMode || IsInPreviewMode && Settings.GetBoolSetting("Glass.Mapper.RunRenderFieldPipelineInPreviewMode", false);
+        }
+
+
+		private string MakeEditable<T>(Expression<Func<T, object>> field, Expression<Func<T, string>> standardOutput, T target, object parameters)
         {
             StringBuilder sb = new StringBuilder();
             var writer = new StringWriter(sb);
@@ -557,7 +571,7 @@ namespace Glass.Mapper.Sc
 
                 SafeDictionary<string> dictionary = ProcessParameters(parameters);
 
-                if (IsInEditingMode && !dictionary.ContainsKey(DisableEditable))
+                if (ShouldRunRenderFieldPipeline() && !dictionary.ContainsKey(DisableEditable))
                 {
                     dictionary.Remove(DisableEditable);
 
